@@ -1,0 +1,47 @@
+#!/bin/sh
+# One unit's driver: « build-unit <unit> », a nonce (64 hexadecimal digits) on its input, the binary left as
+# /out/driver. What is built: the unit's file, units/<unit>.c, and the project's driver (bee/reference/unit_driver.c).
+# The nonce sets the size of two paddings laid around the unit's code and data: where they lie follows it.
+# (BEE_SRC and BEE_OUT name other folders than /src and /out: bee/check.sh gives them, the judge does not.)
+#
+# The project's rule on what a unit may be (units/UNITS.md says the same to who writes one), checked before anything
+# is linked: a unit is plain computation on the bytes it is given. Its text holds no preprocessor line and none of the
+# words that reach past the C language (checked on the whole text, comments and strings included: nothing is parsed,
+# so nothing can hide); its object calls nothing outside itself but the four memory functions a compiler may call on
+# its own, and defines no global name but bee_answer. So a unit reads no file, starts no program and makes no call to
+# the system: it cannot reach the reference, the cases or anything else of the machine it runs on.
+set -eu
+unit="$1"
+src="${BEE_SRC:-/src}" out="${BEE_OUT:-/out}"
+file="$src/units/$unit.c"
+nonce=$(head -c 64)
+printf %s "$nonce" | grep -Eq '^[0-9a-f]{64}$' || { echo "build-unit: the nonce is 64 hexadecimal digits on the input" >&2; exit 1; }
+[ -f "$file" ] || { echo "build-unit: no file units/$unit.c" >&2; exit 1; }
+refuse() { echo "build-unit: units/$unit.c: $1 (units/UNITS.md)" >&2; exit 1; }
+# No preprocessor: no « # », and not its other spelling « %: ».
+if grep -n -e '#' -e '%:' "$file" >&2; then refuse "a unit's file holds no « # » and no « %: »"; fi
+# No line joined to the next by a backslash at its end (a word could be split across the two).
+if grep -nE '\\[[:space:]]*$' "$file" >&2; then refuse "no line may end with a backslash"; fi
+# None of the words that reach past the language: inline assembly, pragmas, and every name with « __ » in it (the
+# compiler's own extensions: attributes, built-in functions, sections).
+if grep -nEw -e 'asm' -e '_Pragma' "$file" >&2 || grep -n '__' "$file" >&2; then refuse "no « asm », no « _Pragma », no « __ »"; fi
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+errors="-Werror=implicit-function-declaration -Werror=implicit-int -Werror=int-conversion -Werror=incompatible-pointer-types -Werror=return-type"
+# shellcheck disable=SC2086
+cc -std=gnu11 -O2 -fno-stack-protector -Wall $errors -include "$src/bee/reference/unit.h" -c -o "$work/unit.o" "$file"
+called=$(nm -u "$work/unit.o" | awk '{ print $NF }' | grep -vxE 'memcpy|memmove|memset|memcmp' || true)
+[ -z "$called" ] || refuse "it calls what is not its own: $(echo $called)"
+defined=$(nm -g --defined-only "$work/unit.o" | awk '{ print $NF }' | grep -vx 'bee_answer' || true)
+[ -z "$defined" ] || refuse "it defines global names other than bee_answer (make them static): $(echo $defined)"
+nm -g --defined-only "$work/unit.o" | awk '$NF == "bee_answer" && $2 == "T" { found = 1 } END { exit !found }' \
+    || refuse "it defines no function bee_answer"
+pad() {
+    printf '\t.section .text\nbee_pad_text_%s:\n\t.fill %s, 1, 0xcc\n\t.section .rodata\nbee_pad_data_%s:\n\t.fill %s, 1, 0x5a\n\t.section .note.GNU-stack,"",@progbits\n' \
+        "$1" "$2" "$1" "$3" > "$work/pad$1.s"
+    cc -c -o "$work/pad$1.o" "$work/pad$1.s"
+}
+pad 1 $(( 0x$(printf %s "$nonce" | cut -c1-4) % 4096 + 16 )) $(( 0x$(printf %s "$nonce" | cut -c5-8) % 4096 + 16 ))
+pad 2 $(( 0x$(printf %s "$nonce" | cut -c9-12) % 4096 + 16 )) $(( 0x$(printf %s "$nonce" | cut -c13-16) % 4096 + 16 ))
+cc -std=gnu11 -O2 -Wall -Werror -I "$src/bee/reference" -c -o "$work/driver.o" "$src/bee/reference/unit_driver.c"
+cc -o "$out/driver" "$work/driver.o" "$work/pad1.o" "$work/unit.o" "$work/pad2.o"

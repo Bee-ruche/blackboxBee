@@ -1,0 +1,10 @@
+#!/bin/sh
+# The reference's side, in its own container (no candidate's file is there). The reference is the committed binary,
+# reference/blackbox, copied as it is: it is also the reference's driver (it reads the cases and writes the answers
+# in the judge's framing itself: reference/README.md). Only the generator of cases is compiled here. Both are left in
+# /out. (BEE_SRC and BEE_OUT name other folders than /src and /out: bee/check.sh gives them, the judge does not.)
+set -eu
+src="${BEE_SRC:-/src}" out="${BEE_OUT:-/out}"
+cp "$src/reference/blackbox" "$out/reference"
+chmod 755 "$out/reference"
+cc -O2 -std=gnu11 -Wall -Wextra -Werror -o "$out/generate" "$src/bee/reference/generate.c"

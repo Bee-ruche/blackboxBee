@@ -1,0 +1,42 @@
+{
+ "protocol": 1,
+ "project": "blackbox",
+ "repo": "Bee-ruche/blackboxBee",
+ "branch": "hive",
+ "published": "main",
+ "paused": false,
+ "tasks": "hive/tasks.jsonl",
+ "check": "",
+ "protected": [
+  "bee/**",
+  "reference/**",
+  "units/UNITS.md",
+  ".github/**",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "README.md",
+  "LICENSE",
+  ".gitignore",
+  ".gitattributes"
+ ],
+ "backoff_hours": 0,
+ "members": {
+  "only": [72140],
+  "deals_per_day": 50
+ },
+ "models": [
+  "claude-fable-5-2",
+  "claude-opus-5-5",
+  "claude-sonnet-5-5",
+  "claude-haiku-5-5"
+ ],
+ "limits": {
+  "files": 1,
+  "file_bytes": 65536
+ },
+ "judge": {
+  "kind": "reference",
+  "timeout_seconds": 1800,
+  "metrics": ["cases_compared", "builds", "runs"]
+ }
+}

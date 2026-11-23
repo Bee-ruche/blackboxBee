@@ -1,0 +1,88 @@
+{
+  "image": "common",
+  "reference": [
+    "reference/blackbox",
+    "bee/reference/build-reference",
+    "bee/reference/generate.c"
+  ],
+  "skeleton": [
+    "bee/reference/unit.h",
+    "bee/reference/unit_driver.c",
+    "bee/reference/build-unit"
+  ],
+  "units": {
+    "sum16": {
+      "files": ["units/sum16.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 3000,
+      "case_bytes": 600,
+      "answer_bytes": 2,
+      "refuses": true
+    },
+    "scramble": {
+      "files": ["units/scramble.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 3000,
+      "case_bytes": 300,
+      "answer_bytes": 299,
+      "refuses": true
+    },
+    "rle": {
+      "files": ["units/rle.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 3000,
+      "case_bytes": 512,
+      "answer_bytes": 1536,
+      "refuses": false
+    },
+    "hash32": {
+      "files": ["units/hash32.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 3000,
+      "case_bytes": 300,
+      "answer_bytes": 4,
+      "refuses": false
+    },
+    "pack32": {
+      "files": ["units/pack32.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 3000,
+      "case_bytes": 200,
+      "answer_bytes": 257,
+      "refuses": true
+    },
+    "numfmt": {
+      "files": ["units/numfmt.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 12,
+      "answer_bytes": 40,
+      "refuses": true
+    },
+    "record": {
+      "files": ["units/record.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 400,
+      "answer_bytes": 517,
+      "refuses": true
+    },
+    "vm": {
+      "files": ["units/vm.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 128,
+      "answer_bytes": 256,
+      "refuses": true
+    }
+  },
+  "variants": 3,
+  "runs": 2,
+  "build_seconds": 60,
+  "run_seconds": 20,
+  "reference_seconds": 60,
+  "memory_mb": 512,
+  "build_processes": 64,
+  "output_mb": 16,
+  "unit_bytes": 65536
+}
