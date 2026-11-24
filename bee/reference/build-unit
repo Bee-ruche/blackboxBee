@@ -7,11 +7,13 @@
 #   1. clang compiles the unit's file, units/<unit>.c, for wasm32 with no C library (unit.h included first), and the
 #      project's mem.c beside it (the four memory functions the compiler calls on its own);
 #   2. wasm-ld links them into a module that exports bee_answer and its memory, with a memory of fixed size (16 pages:
-#      1 MiB, as large at its start as at its most) and the layout the nonce draws (below); a symbol the unit does not
-#      define stops the link;
-#   3. the module is read back (wasm-objdump, wasm-validate): at most the unit's cap in bytes; no import of any kind
-#      and no start function; exactly the exports memory and bee_answer; one memory of 16 pages at its start and at
-#      most, not shared;
+#      1 MiB, as large at its start as at its most) and the layout the nonce draws (below); a symbol the unit uses and
+#      does not define stops the link, but a function the unit declares as an import (import_module, import_name)
+#      links, and becomes an import of the module, which step 3 refuses;
+#   3. the module is read back (wasm-validate, wasm-objdump, each output written to a file and its exit status tested
+#      before it is parsed): at most the unit's cap in bytes; no import of any kind, no start function and no custom
+#      section; exactly the exports memory and bee_answer; bee_answer a function of four i32 to an i32; one memory of
+#      16 pages at its start and at most, not shared;
 #   4. wasm2c translates the module to C, and cc compiles that C with the project's host (host.c) and wasm2c's own
 #      runtime (explicit bounds checks, no signal handler: WASM_RT_USE_MMAP=0, WASM_RT_MEMCHECK_BOUNDS_CHECK=1) into
 #      one native, single-threaded driver.
@@ -64,17 +66,30 @@ clang-18 $cflags -fno-builtin -c -o "$work/mem.o" "$src/bee/reference/mem.c"
 wasm-ld-18 --no-entry --export=bee_answer --strip-all --fatal-warnings \
     --initial-memory=1048576 --max-memory=1048576 --global-base="$base" -z stack-size="$stack" \
     -o "$work/module.wasm" "$work/unit.o" "$work/mem.o"
-# 3. The module read back.
+# 3. The module read back. Each reading is written to a file first, its exit status tested, and only then parsed.
 size=$(wc -c < "$work/module.wasm")
 [ "$size" -le "$cap" ] || refuse "its module is $size bytes, above the cap of $cap bytes for the unit $unit"
 wasm-validate "$work/module.wasm" || refuse "its module does not validate"
-sections=$(wasm-objdump -h "$work/module.wasm" | awk '$2 ~ /^start=/ { print $1 }')
-odd=$(printf '%s\n' "$sections" | grep -vxE 'Type|Function|Table|Memory|Global|Export|Elem|Code|Data|DataCount|Custom' || true)
-[ -z "$odd" ] || refuse "its module has sections a unit's module does not: $(echo $odd) (no import, no start function)"
-exports=$(wasm-objdump -x -j Export "$work/module.wasm" | grep '^ - ' | sed 's/^ - \([a-z]*\)\[[0-9]*\].* -> "\(.*\)"$/\1 \2/' | sort)
+wasm-objdump -h "$work/module.wasm" > "$work/sections.txt" || refuse "its module's sections cannot be read"
+wasm-objdump -x "$work/module.wasm" > "$work/details.txt" || refuse "its module's details cannot be read"
+# Sections: no Import (no function, memory, table or global from outside), no Start, and no Custom (wasm-ld's
+# --strip-all leaves none for an honest unit).
+sections=$(awk '$2 ~ /^start=/ { print $1 }' "$work/sections.txt")
+[ -n "$sections" ] || refuse "its module's sections cannot be read"
+odd=$(printf '%s\n' "$sections" | grep -vxE 'Type|Function|Table|Memory|Global|Export|Elem|Code|Data|DataCount' || true)
+[ -z "$odd" ] || refuse "its module has sections a unit's module does not: $(echo $odd) (no import, no start function, no custom section)"
+# Exports: exactly bee_answer, a function, and the memory.
+exports=$(sed -n '/^Export\[/,/^[A-Z]/p' "$work/details.txt" | grep '^ - ' | sed 's/^ - \([a-z]*\)\[[0-9]*\].* -> "\(.*\)"$/\1 \2/' | sort)
 [ "$exports" = "func bee_answer
 memory memory" ] || refuse "its module must export exactly bee_answer and its memory, and exports: $(echo $exports)"
-memories=$(wasm-objdump -x -j Memory "$work/module.wasm" | grep '^ - ')
+# bee_answer's signature: four i32 (in, n, out, len) and an i32 (the status).
+func=$(sed -n 's/^ - func\[\([0-9]*\)\].* -> "bee_answer"$/\1/p' "$work/details.txt")
+sig=$(sed -n '/^Function\[/,/^[A-Z]/p' "$work/details.txt" | sed -n "s/^ - func\[$func\] sig=\([0-9]*\).*/\1/p")
+type=$(sed -n '/^Type\[/,/^[A-Z]/p' "$work/details.txt" | sed -n "s/^ - type\[$sig\] //p")
+[ -n "$func" ] && [ -n "$sig" ] && [ "$type" = "(i32, i32, i32, i32) -> i32" ] \
+    || refuse "its bee_answer is not a function of four i32 to an i32: $type"
+# Memory: one, of 16 pages at its start and at most, not shared.
+memories=$(sed -n '/^Memory\[/,/^[A-Z]/p' "$work/details.txt" | grep '^ - ' || true)
 [ "$memories" = " - memory[0] pages: initial=16 max=16" ] || refuse "its module's memory is not one memory of 16 pages at its start and at most: $memories"
 # 4. The driver.
 wasm2c -n unit -o "$work/module.c" "$work/module.wasm"

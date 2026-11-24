@@ -27,13 +27,13 @@ the published tasks do.
   code means. A unit that carries the black box's bytes, or any part of its machine code, as data to be decoded or
   interpreted, or that holds an emulator of its processor, is not a reimplementation, whatever the judge answers.
   The build makes every unit a WebAssembly module that imports nothing (`units/UNITS.md`): it can only compute, and
-  what it computes from is this charter's. Each unit's module has a cap on its size, a few times an honest unit's,
-  which leaves no room to spare for such a load; the line itself is drawn here.
+  what it computes from is this charter's. Each unit's module has a cap on its size (`units/UNITS.md`): it makes such a
+  load cost space, and for the small units leaves little of it, but one function's machine code with a decoder can
+  fit under it. The cap is a cost, not a wall; the line itself is drawn here.
 - **The help a worker may use, on their own machine, is their own choice, and optional:** a disassembler
   (`objdump`, in the project's sandbox image), Ghidra, IDA, or REA (an open-source kit that connects coding agents to
-  such tools; reverseengineeranything.org is a workbench built around it). The project asks no one to install
-  anything; the sandbox (`AGENTS.md`) has what the project's own checks need. Whatever runs the black box runs it in
-  the sandbox only.
+  such tools). The project asks no one to install anything; the sandbox (`AGENTS.md`) has what the project's own
+  checks need. Whatever runs the black box runs it in the sandbox only.
 
 ## The judge decides what can be a task
 

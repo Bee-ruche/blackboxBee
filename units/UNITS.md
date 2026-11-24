@@ -39,10 +39,11 @@ judge refuses a unit that fails any of them:
    an implicit declaration, an implicit `int`, a conversion between an integer and a pointer, incompatible pointer
    types, or a function that does not return its value.
 2. **Linked** by `wasm-ld-18` into a module that exports `bee_answer`, with a memory of **1 MiB, fixed** (16 pages:
-   it cannot grow). A name the unit uses and does not define stops the link.
+   it cannot grow). A name the unit uses and does not define stops the link. A function declared as an import
+   (`import_module`, `import_name`) does link: it becomes an import of the module, which step 3 refuses.
 3. **Read back** (`wasm-objdump`, `wasm-validate`): the module must validate, import **nothing** (no function,
-   memory, table or global from outside), have no start function, export **exactly** `bee_answer` and its memory,
-   and be no larger than **its unit's cap**:
+   memory, table or global from outside), have no start function and no custom section, export **exactly**
+   `bee_answer` (a function of four `i32` to an `i32`) and its memory, and be no larger than **its unit's cap**:
 
    | Unit | sum16 | scramble | rle | hash32 | pack32 | numfmt | record | vm |
    | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -64,6 +65,9 @@ refused.
 The driver also gives itself a secure computing filter (seccomp) once the module is ready: from then on its process
 may only read and write what it has already opened, and end. That is an extra. The module, which imports nothing,
 is what holds a unit to computation.
+
+Carrying the black box's bytes, or an emulator of its processor, is not a reimplementation: the charter forbids it
+(`hive/charter.md`), whatever the judge answers.
 
 ## The units
 
