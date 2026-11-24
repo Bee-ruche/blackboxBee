@@ -33,9 +33,9 @@ docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges -
 
 The same `docker run` line, with another command in place of `sh bee/check.sh <unit>`, runs the black box (`sh -c "printf hello | reference/blackbox sum16 - | od -An -tx1"`) or reads it (`objdump -d -M intel reference/blackbox`). Other tools (Ghidra, IDA, REA) are your own choice, on your own machine; the project asks you to install nothing, and the black box itself runs in the sandbox only.
 
-On a Linux machine whose own `/usr` holds `cc` and `nm`, `bee/sandbox/sans-docker.sh sh bee/check.sh <unit>` does the same without Docker, with every file of the project read-only but the units of `units/` ([bee/README.md](bee/README.md)).
+On a Linux machine whose own `/usr` holds `cc`, `clang-18`, `wasm-ld-18` and wabt's `wasm-objdump`, `wasm-validate` and `wasm2c` (with its runtime under `/usr/share/wabt/wasm2c`), `bee/sandbox/sans-docker.sh sh bee/check.sh <unit>` does the same without Docker, with every file of the project read-only but the units of `units/` ([bee/README.md](bee/README.md)).
 
-The check copies the black box, builds your unit with the judge's own scripts, draws cases, and compares your unit's answers with the black box's. The judge does the same in its own containers, with cases it draws when it judges, several builds and several runs: a unit that passes here on luck does not pass there.
+The check copies the black box, builds your unit with the judge's own scripts (into a WebAssembly module that imports nothing, then a driver: `units/UNITS.md`), draws cases, and compares your unit's answers with the black box's. The judge does the same in its own containers, with cases it draws when it judges, several builds and several runs: a unit that passes here on luck does not pass there.
 
 ## Submitting
 

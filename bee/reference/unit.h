@@ -1,5 +1,6 @@
-/* What a unit's file is given (units/UNITS.md). bee/reference/build-unit compiles a unit's file with this header
- * included before its first line (« -include »): a unit's file holds no preprocessor line of its own.
+/* What a unit's file is given (units/UNITS.md). bee/reference/build-unit compiles a unit's file for 32-bit WebAssembly
+ * (clang, wasm32, no C library), with this header included before its first line (« -include »). There, pointers and
+ * usize are 32 bits wide.
  *
  * A unit is one function, bee_answer: the input is in[0..n); it writes its answer to out (BEE_OUT_MAX bytes of room),
  * sets *len to the answer's length and returns 0; or it refuses the input and returns 1. Any other return value, or an

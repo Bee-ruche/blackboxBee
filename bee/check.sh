@@ -8,7 +8,7 @@
 set -eu
 unit="${1:?usage: sh bee/check.sh <unit>   (sum16, scramble, rle, hash32, pack32, numfmt, record, vm)}"
 [ -f "units/$unit.c" ] || { echo "check: no unit units/$unit.c" >&2; exit 2; }
-for tool in cc nm; do
+for tool in cc clang-18 wasm-ld-18 wasm-objdump wasm-validate wasm2c; do
     command -v "$tool" >/dev/null || { echo "check: no $tool inside this sandbox: use the sandbox's image (AGENTS.md)" >&2; exit 3; }
 done
 count=$(awk -v unit="\"$unit\":" '$1 == unit { found = 1 } found && $1 == "\"cases\":" { gsub(/[^0-9]/, "", $2); print $2; exit }' bee/reference/project.json)

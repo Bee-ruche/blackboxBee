@@ -21,27 +21,49 @@ int bee_answer(const u8 *in, usize n, u8 *out, usize *len);
 - Any other return value, or an answer longer than 4096 bytes, stops the run, and the judge refuses the unit.
 
 The types: `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64` (unsigned and signed integers of 8 to 64 bits) and
-`usize` (unsigned, 64 bits). Every other function and constant the unit needs, it writes itself, as `static`.
+`usize` (unsigned, **32 bits**: the unit is built for 32-bit WebAssembly, where pointers and `unsigned long` are 32
+bits wide). Every other function and constant the unit needs, it writes itself.
 
-## What a unit's file may hold
+## What a unit becomes
 
-The rule is checked by `bee/reference/build-unit` before anything is linked, and the judge refuses a unit that
-breaks it. It is checked on the whole text, comments and strings included:
+A unit is built into a **WebAssembly module that imports nothing**, and only that module runs. So a unit can only
+compute on the bytes it is given and on its own memory: it has no way to read a file, start a program, or ask the
+system for anything. That is what the design rests on. `bee/reference/build-unit` does it in four steps, and the
+judge refuses a unit that fails any of them:
 
-- **No preprocessor:** no `#` anywhere (so no `#include` and no `#define`), and no `%:`.
-- **No line ending in a backslash.**
-- **None of these words:** `asm`, `_Pragma`, nor anything with two underscores in a row (`__`).
-- **It calls nothing but itself.** The compiled file may refer to no function or variable outside it, except
-  `memcpy`, `memmove`, `memset` and `memcmp`, which a compiler may call on its own (a unit may call them too, after
-  declaring them).
-- **One global name: `bee_answer`.** Every other function and variable is `static`.
+1. **Compiled** by clang for 32-bit WebAssembly (`clang-18 --target=wasm32 -mcpu=mvp -std=gnu11 -O2 -ffreestanding
+   -nostdlib`), with `bee/reference/unit.h` included first. There is no C library: no `printf`, no `malloc`, no
+   header of the C library. The compiler's own freestanding headers (`stdint.h`, `stddef.h`, `limits.h`…) and the
+   preprocessor may be used. The project gives the module `memcpy`, `memmove`, `memset` and `memcmp`
+   (`bee/reference/mem.c`): a unit may call them after declaring them, and must not define them. The build stops on
+   an implicit declaration, an implicit `int`, a conversion between an integer and a pointer, incompatible pointer
+   types, or a function that does not return its value.
+2. **Linked** by `wasm-ld-18` into a module that exports `bee_answer`, with a memory of **1 MiB, fixed** (16 pages:
+   it cannot grow). A name the unit uses and does not define stops the link.
+3. **Read back** (`wasm-objdump`, `wasm-validate`): the module must validate, import **nothing** (no function,
+   memory, table or global from outside), have no start function, export **exactly** `bee_answer` and its memory,
+   and be no larger than **its unit's cap**:
 
-So a unit is plain computation on the bytes it is given: it reads no file, starts no program and makes no call to
-the system. The driver holds it to that a second time: it calls the unit under a secure computing filter
-(seccomp) it gives itself, where the process may only read and write what it has already opened, and end: any other
-system call ends the run. It is built with `cc -std=gnu11 -O2` (gcc, from the judge's Ubuntu image), and the build stops on an
-implicit declaration, an implicit `int`, a conversion between an integer and a pointer, incompatible pointer types,
-or a function that does not return its value.
+   | Unit | sum16 | scramble | rle | hash32 | pack32 | numfmt | record | vm |
+   | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+   | Cap on the module, in bytes | 4,096 | 4,096 | 4,096 | 4,096 | 4,096 | 4,096 | 12,416 | 5,788 |
+
+   Each cap is four times the module of an honest unit written for the project, and never under 4 KiB. Comments,
+   names and the layout of the source cost nothing: the cap is on the module the compiler makes.
+4. **Translated** by `wasm2c` into C, which `cc` compiles with the project's host (`bee/reference/host.c`) and the
+   translator's own runtime into the driver. Your C never reaches `cc` itself: what runs is the translation of the
+   module, where every load and store is checked against the module's own memory.
+
+When it runs, the driver copies each case into a window it keeps in the module's memory, below the unit's own data,
+and calls `bee_answer` there. A **trap** ends the run, and the judge refuses the unit: a load or a store outside the
+module's 1 MiB, a division by zero, a call nested more than 500 deep, or code the compiler marked unreachable. The
+place of the window, of the unit's data and of its stack follow the build's nonce: the judge's several builds lay a
+unit out in several ways, and a unit that reads memory it never wrote may answer otherwise in one of them, and be
+refused.
+
+The driver also gives itself a secure computing filter (seccomp) once the module is ready: from then on its process
+may only read and write what it has already opened, and end. That is an extra. The module, which imports nothing,
+is what holds a unit to computation.
 
 ## The units
 

@@ -23,9 +23,12 @@ the published tasks do.
 - **Never a copy of any other program.** Not of code found elsewhere, whatever its licence, even where a function of
   the black box looks like a known algorithm: the black box is the specification, and where it differs from what is
   known elsewhere, it is right.
-- **Never the black box's own bytes.** A unit that carries the binary, or pieces of its machine code to run, is not
-  a reimplementation; the project's build refuses what reaches outside the C language (`units/UNITS.md`), and the
-  rest is this charter's.
+- **Never the black box's own bytes.** A unit is C written by you from what the black box does and what its machine
+  code means. A unit that carries the black box's bytes, or any part of its machine code, as data to be decoded or
+  interpreted, or that holds an emulator of its processor, is not a reimplementation, whatever the judge answers.
+  The build makes every unit a WebAssembly module that imports nothing (`units/UNITS.md`): it can only compute, and
+  what it computes from is this charter's. Each unit's module has a cap on its size, a few times an honest unit's,
+  which leaves no room to spare for such a load; the line itself is drawn here.
 - **The help a worker may use, on their own machine, is their own choice, and optional:** a disassembler
   (`objdump`, in the project's sandbox image), Ghidra, IDA, or REA (an open-source kit that connects coding agents to
   such tools; reverseengineeranything.org is a workbench built around it). The project asks no one to install

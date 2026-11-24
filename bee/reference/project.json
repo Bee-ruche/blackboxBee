@@ -1,5 +1,5 @@
 {
-  "image": "common",
+  "image": "wasm",
   "reference": [
     "reference/blackbox",
     "bee/reference/build-reference",
@@ -7,7 +7,8 @@
   ],
   "skeleton": [
     "bee/reference/unit.h",
-    "bee/reference/unit_driver.c",
+    "bee/reference/host.c",
+    "bee/reference/mem.c",
     "bee/reference/build-unit"
   ],
   "units": {

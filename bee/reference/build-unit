@@ -1,15 +1,28 @@
 #!/bin/sh
-# One unit's driver: « build-unit <unit> », a nonce (64 hexadecimal digits) on its input, the binary left as
-# /out/driver. What is built: the unit's file, units/<unit>.c, and the project's driver (bee/reference/unit_driver.c).
-# The nonce sets the size of two paddings laid around the unit's code and data: where they lie follows it.
+# One unit's driver: « build-unit <unit> », a nonce (64 hexadecimal digits) on its input, the binary left as /out/driver.
 # (BEE_SRC and BEE_OUT name other folders than /src and /out: bee/check.sh gives them, the judge does not.)
 #
-# The project's rule on what a unit may be (units/UNITS.md says the same to who writes one), checked before anything
-# is linked: a unit is plain computation on the bytes it is given. Its text holds no preprocessor line and none of the
-# words that reach past the C language (checked on the whole text, comments and strings included: nothing is parsed,
-# so nothing can hide); its object calls nothing outside itself but the four memory functions a compiler may call on
-# its own, and defines no global name but bee_answer. So a unit reads no file, starts no program and makes no call to
-# the system: it cannot reach the reference, the cases or anything else of the machine it runs on.
+# The unit becomes a WebAssembly module with no imports, and only then a native driver (units/UNITS.md says the same
+# to who writes one):
+#   1. clang compiles the unit's file, units/<unit>.c, for wasm32 with no C library (unit.h included first), and the
+#      project's mem.c beside it (the four memory functions the compiler calls on its own);
+#   2. wasm-ld links them into a module that exports bee_answer and its memory, with a memory of fixed size (16 pages:
+#      1 MiB, as large at its start as at its most) and the layout the nonce draws (below); a symbol the unit does not
+#      define stops the link;
+#   3. the module is read back (wasm-objdump, wasm-validate): at most the unit's cap in bytes; no import of any kind
+#      and no start function; exactly the exports memory and bee_answer; one memory of 16 pages at its start and at
+#      most, not shared;
+#   4. wasm2c translates the module to C, and cc compiles that C with the project's host (host.c) and wasm2c's own
+#      runtime (explicit bounds checks, no signal handler: WASM_RT_USE_MMAP=0, WASM_RT_MEMCHECK_BOUNDS_CHECK=1) into
+#      one native, single-threaded driver.
+# The unit's C never reaches cc: what runs is wasm2c's translation of a module that validated, where every load and
+# store is checked against the module's own memory, and nothing outside the module can be called, since it imports
+# nothing. host.c also calls the instantiation with the instance alone: a module with an import, should step 3 miss
+# it, would not even compile.
+#
+# The layout the nonce draws (units/UNITS.md): the host's window (the case, room for the answer, its length) at
+# 1024 + 16·a, the unit's data from just past the window plus 16·b, its stack of 65,536 + 16·c bytes: two builds lay
+# the unit in two places, and give two different drivers.
 set -eu
 unit="$1"
 src="${BEE_SRC:-/src}" out="${BEE_OUT:-/out}"
@@ -18,30 +31,61 @@ nonce=$(head -c 64)
 printf %s "$nonce" | grep -Eq '^[0-9a-f]{64}$' || { echo "build-unit: the nonce is 64 hexadecimal digits on the input" >&2; exit 1; }
 [ -f "$file" ] || { echo "build-unit: no file units/$unit.c" >&2; exit 1; }
 refuse() { echo "build-unit: units/$unit.c: $1 (units/UNITS.md)" >&2; exit 1; }
-# No preprocessor: no « # », and not its other spelling « %: ».
-if grep -n -e '#' -e '%:' "$file" >&2; then refuse "a unit's file holds no « # » and no « %: »"; fi
-# No line joined to the next by a backslash at its end (a word could be split across the two).
-if grep -nE '\\[[:space:]]*$' "$file" >&2; then refuse "no line may end with a backslash"; fi
-# None of the words that reach past the language: inline assembly, pragmas, and every name with « __ » in it (the
-# compiler's own extensions: attributes, built-in functions, sections).
-if grep -nEw -e 'asm' -e '_Pragma' "$file" >&2 || grep -n '__' "$file" >&2; then refuse "no « asm », no « _Pragma », no « __ »"; fi
+# The cap on each unit's module, in bytes: four times the honest unit's module, and never under 4 KiB (units/UNITS.md).
+# The honest modules, built with these flags on 24 November 2026: sum16 168, scramble 242, rle 360, hash32 335,
+# pack32 499, numfmt 899, record 3,104, vm 1,447 bytes.
+case "$unit" in
+    sum16) cap=4096 ;;
+    scramble) cap=4096 ;;
+    rle) cap=4096 ;;
+    hash32) cap=4096 ;;
+    pack32) cap=4096 ;;
+    numfmt) cap=4096 ;;
+    record) cap=12416 ;;
+    vm) cap=5788 ;;
+    *) echo "build-unit: the project knows no unit $unit" >&2; exit 1 ;;
+esac
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-errors="-Werror=implicit-function-declaration -Werror=implicit-int -Werror=int-conversion -Werror=incompatible-pointer-types -Werror=return-type"
+digits() { printf %s "$nonce" | cut -c"$1"; }
+a=$(( 0x$(digits 1-4) % 4096 )) b=$(( 0x$(digits 5-8) % 4096 )) c=$(( 0x$(digits 9-12) % 4096 ))
+window=$(( 1024 + 16 * a ))
+base=$(( (window + 65536 + 4096 + 4 + 15) / 16 * 16 + 16 * b ))
+stack=$(( 65536 + 16 * c ))
+# 1. The unit and mem.c, for wasm32.
+cflags="--target=wasm32 -mcpu=mvp -std=gnu11 -O2 -ffreestanding -nostdlib -fvisibility=hidden -Wall
+  -Werror=implicit-function-declaration -Werror=implicit-int -Werror=int-conversion -Werror=incompatible-pointer-types
+  -Werror=return-type"
 # shellcheck disable=SC2086
-cc -std=gnu11 -O2 -fno-stack-protector -Wall $errors -include "$src/bee/reference/unit.h" -c -o "$work/unit.o" "$file"
-called=$(nm -u "$work/unit.o" | awk '{ print $NF }' | grep -vxE 'memcpy|memmove|memset|memcmp' || true)
-[ -z "$called" ] || refuse "it calls what is not its own: $(echo $called)"
-defined=$(nm -g --defined-only "$work/unit.o" | awk '{ print $NF }' | grep -vx 'bee_answer' || true)
-[ -z "$defined" ] || refuse "it defines global names other than bee_answer (make them static): $(echo $defined)"
-nm -g --defined-only "$work/unit.o" | awk '$NF == "bee_answer" && $2 == "T" { found = 1 } END { exit !found }' \
-    || refuse "it defines no function bee_answer"
-pad() {
-    printf '\t.section .text\nbee_pad_text_%s:\n\t.fill %s, 1, 0xcc\n\t.section .rodata\nbee_pad_data_%s:\n\t.fill %s, 1, 0x5a\n\t.section .note.GNU-stack,"",@progbits\n' \
-        "$1" "$2" "$1" "$3" > "$work/pad$1.s"
-    cc -c -o "$work/pad$1.o" "$work/pad$1.s"
-}
-pad 1 $(( 0x$(printf %s "$nonce" | cut -c1-4) % 4096 + 16 )) $(( 0x$(printf %s "$nonce" | cut -c5-8) % 4096 + 16 ))
-pad 2 $(( 0x$(printf %s "$nonce" | cut -c9-12) % 4096 + 16 )) $(( 0x$(printf %s "$nonce" | cut -c13-16) % 4096 + 16 ))
-cc -std=gnu11 -O2 -Wall -Werror -I "$src/bee/reference" -c -o "$work/driver.o" "$src/bee/reference/unit_driver.c"
-cc -o "$out/driver" "$work/driver.o" "$work/pad1.o" "$work/unit.o" "$work/pad2.o"
+clang-18 $cflags -include "$src/bee/reference/unit.h" -c -o "$work/unit.o" "$file"
+# shellcheck disable=SC2086
+clang-18 $cflags -fno-builtin -c -o "$work/mem.o" "$src/bee/reference/mem.c"
+# 2. The module.
+wasm-ld-18 --no-entry --export=bee_answer --strip-all --fatal-warnings \
+    --initial-memory=1048576 --max-memory=1048576 --global-base="$base" -z stack-size="$stack" \
+    -o "$work/module.wasm" "$work/unit.o" "$work/mem.o"
+# 3. The module read back.
+size=$(wc -c < "$work/module.wasm")
+[ "$size" -le "$cap" ] || refuse "its module is $size bytes, above the cap of $cap bytes for the unit $unit"
+wasm-validate "$work/module.wasm" || refuse "its module does not validate"
+sections=$(wasm-objdump -h "$work/module.wasm" | awk '$2 ~ /^start=/ { print $1 }')
+odd=$(printf '%s\n' "$sections" | grep -vxE 'Type|Function|Table|Memory|Global|Export|Elem|Code|Data|DataCount|Custom' || true)
+[ -z "$odd" ] || refuse "its module has sections a unit's module does not: $(echo $odd) (no import, no start function)"
+exports=$(wasm-objdump -x -j Export "$work/module.wasm" | grep '^ - ' | sed 's/^ - \([a-z]*\)\[[0-9]*\].* -> "\(.*\)"$/\1 \2/' | sort)
+[ "$exports" = "func bee_answer
+memory memory" ] || refuse "its module must export exactly bee_answer and its memory, and exports: $(echo $exports)"
+memories=$(wasm-objdump -x -j Memory "$work/module.wasm" | grep '^ - ')
+[ "$memories" = " - memory[0] pages: initial=16 max=16" ] || refuse "its module's memory is not one memory of 16 pages at its start and at most: $memories"
+# 4. The driver.
+wasm2c -n unit -o "$work/module.c" "$work/module.wasm"
+rt="-DWASM_RT_USE_MMAP=0 -DWASM_RT_MEMCHECK_BOUNDS_CHECK=1 -I$work -I/usr/share/wabt/wasm2c"
+# shellcheck disable=SC2086
+cc -std=gnu11 -O2 $rt -c -o "$work/module.o" "$work/module.c"
+# shellcheck disable=SC2086
+cc -std=gnu11 -O2 $rt -c -o "$work/runtime.o" /usr/share/wabt/wasm2c/wasm-rt-impl.c
+# shellcheck disable=SC2086
+cc -std=gnu11 -O2 $rt -c -o "$work/unwind.o" /usr/share/wabt/wasm2c/wasm-rt-exceptions-impl.c
+# shellcheck disable=SC2086
+cc -std=gnu11 -O2 -Wall -Werror $rt -DBEE_WINDOW="$window" -c -o "$work/host.o" "$src/bee/reference/host.c"
+cc -Wl,-z,noexecstack -o "$out/driver" "$work/host.o" "$work/module.o" "$work/runtime.o" "$work/unwind.o" -lm
+echo "build-unit: units/$unit.c: a module of $size bytes (cap $cap), window at $window, data from $base, stack $stack" >&2
