@@ -53,8 +53,11 @@ judge refuses a unit that fails any of them:
    | `hash32` | 4,096 | | `expr` | 16,364 |
    | `pack32` | 4,096 | | `lz`, `lz_a` | 5,352 |
    | `numfmt` | 4,096 | | `vm2`, `vm2_a` | 8,636 |
-   | `record` | 12,416 | | | |
-   | `vm` | 5,788 | | | |
+   | `record` | 12,416 | | `unrle` | 4,096 |
+   | `vm` | 5,788 | | `unpack32` | 4,096 |
+   | | | | `kv`, `kv_a` | 12,288 |
+   | | | | `alloc`, `alloc_a` | 5,276 |
+   | | | | `frame`, `frame_a` | 16,984 |
 
    Each cap is four times the module of an honest unit written for the project, and never under 4 KiB. Comments,
    names and the layout of the source cost nothing: the cap is on the module the compiler makes.
@@ -96,8 +99,18 @@ Carrying the black box's bytes, or an emulator of its processor, is not a reimpl
 | `vm2` | `blackbox vm2` | a larger machine that runs a byte code and answers what it emits | up to 256 bytes |
 | `lz_a` | `blackbox lz_a` | `lz`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 600 bytes |
 | `vm2_a` | `blackbox vm2_a` | `vm2`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 256 bytes |
+| `unrle` | `blackbox unrle` | the decoder of the code `rle` writes | up to 600 bytes |
+| `unpack32` | `blackbox unpack32` | the decoder of the text `pack32` writes | up to 270 bytes |
+| `kv` | `blackbox kv` | a script of operations on a small keyed store, answered operation by operation | up to 600 bytes |
+| `alloc` | `blackbox alloc` | a script of requests to a small memory allocator, answered request by request | up to 600 bytes |
+| `frame` | `blackbox frame` | a framed text, with a binary form of its fields | up to 900 bytes |
+| `kv_a` | `blackbox kv_a` | `kv`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 600 bytes |
+| `alloc_a` | `blackbox alloc_a` | `alloc`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 600 bytes |
+| `frame_a` | `blackbox frame_a` | `frame`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 900 bytes |
 
-Rung 1 is the first eight units; rung 2 the next six and their two fallbacks (`hive/charter.md`, « The ladder »).
+Rung 1 is the first eight units; rung 2 the next six and their two fallbacks; rung 3 the next five and their three
+fallbacks (`hive/charter.md`, « The ladder »). Each case of kv and alloc is a whole input: a script of operations
+runs from a fresh state, never on what an earlier case left.
 
 The judge draws its cases with `bee/reference/generate.c`. For rung 1's units, that file shows the shape of the
 inputs it tries (their lengths, their bytes, the grammar the parser is tried on), never an answer: the answers are the

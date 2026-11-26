@@ -36,7 +36,9 @@ refuse() { echo "build-unit: units/$unit.c: $1 (units/UNITS.md)" >&2; exit 1; }
 # The cap on each unit's module, in bytes: four times the honest unit's module, and never under 4 KiB (units/UNITS.md).
 # The honest modules, built with these flags on 24 November 2026: sum16 168, scramble 242, rle 360, hash32 335,
 # pack32 499, numfmt 899, record 3,104, vm 1,447 bytes. Rung 2, on 26 November 2026: sbox8 1,252, calendar 4,377,
-# utf 988, expr 4,091, lz 1,338, vm2 2,159 bytes (a fallback has its full unit's cap: lz_a lz's, vm2_a vm2's).
+# utf 988, expr 4,091, lz 1,338, vm2 2,159 bytes. Rung 3: unrle 395, unpack32 742, kv 3,072, alloc 1,319,
+# frame 4,246 bytes.
+# A fallback has its full unit's cap (lz_a lz's, vm2_a vm2's, kv_a kv's, alloc_a alloc's, frame_a frame's).
 case "$unit" in
     sum16) cap=4096 ;;
     scramble) cap=4096 ;;
@@ -54,6 +56,14 @@ case "$unit" in
     vm2) cap=8636 ;;
     lz_a) cap=5352 ;;
     vm2_a) cap=8636 ;;
+    unrle) cap=4096 ;;
+    unpack32) cap=4096 ;;
+    kv) cap=12288 ;;
+    alloc) cap=5276 ;;
+    frame) cap=16984 ;;
+    kv_a) cap=12288 ;;
+    alloc_a) cap=5276 ;;
+    frame_a) cap=16984 ;;
     *) echo "build-unit: the project knows no unit $unit" >&2; exit 1 ;;
 esac
 work=$(mktemp -d)

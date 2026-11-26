@@ -3,7 +3,8 @@
 `blackbox` is the project's reference and its only specification: a program for Linux on x86-64, written for the
 Bee project, whose source is not published. Each of its functions is « bytes in, bytes out, or a refusal »;
 `units/UNITS.md` names them and says what kind of function each is. It grows by rungs (`hive/charter.md`): rung 2
-added six functions and two fallbacks (`units/UNITS.md`) to rung 1's eight, whose behaviour did not change.
+added six functions and two fallbacks (`units/UNITS.md`) to rung 1's eight, rung 3 five more and three fallbacks;
+the functions of each rung keep their behaviour in the next.
 
 **Run it in the project's sandbox only** (`AGENTS.md`): it is project code like any other.
 
@@ -41,8 +42,8 @@ twice in a row, the two builds compared byte for byte:
 | --- | --- |
 | compiler | `cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0` |
 | flags | `-std=gnu11 -O2 -fno-stack-protector -fcf-protection=none -U_FORTIFY_SOURCE -fno-asynchronous-unwind-tables -fno-ident -s -Wl,--build-id=none` |
-| size | 63,544 bytes, stripped, dynamically linked to the C library (symbols of `GLIBC_2.2.5` and `GLIBC_2.34`) |
-| SHA-256 | `2fe535b03925bdea2324f56f4e8de6083c6a3873250b631424f317f4d2d3acf9` (rung 2; rung 1's was `18f082ac…`) |
+| size | 92,216 bytes, stripped, dynamically linked to the C library (symbols of `GLIBC_2.2.5` and `GLIBC_2.34`) |
+| SHA-256 | `16adaea27e2c750b2b0afbe3eaf7234f1779be9a545abe4f1a8a06ec4c00ba00` (rung 3; rung 2's was `2fe535b0…`, rung 1's `18f082ac…`) |
 
 Optimised and stripped, without the protections that clutter the machine code (stack protector, control-flow
 markers, fortified calls): what is left to read is the functions themselves and the small program around them.

@@ -45,7 +45,9 @@ for word:
 - rung 1 (23 November 2026), each with its task already: `sum16`, `scramble`, `rle`, `hash32`, `pack32`, `numfmt`,
   `record`, `vm`;
 - rung 2 (the ladder, below), each with its task in `hive/backlog.jsonl`: `sbox8`, `calendar`, `utf`, `expr`, `lz`,
-  `vm2`.
+  `vm2`;
+- rung 3, each with its task in `hive/backlog.jsonl` (some waiting, by `needs`, for a unit of rung 1): `unrle`,
+  `unpack32`, `kv`, `alloc`, `frame`.
 
 When the judge learns to check a new unit, its author adds the unit's value to this list, word for word. A value
 listed here that no task names yet is one the cutter may write a task for, on the file `units/<unit>.c`. The judge
@@ -68,6 +70,7 @@ are `blackbox-0N01` to `-0N49` (N on two digits: `blackbox-0201`, `blackbox-0301
 | Rung | Fallback (for) and its fixed id |
 | --- | --- |
 | 2 | `lz_a` (`lz`) `blackbox-0251`; `vm2_a` (`vm2`) `blackbox-0252` |
+| 3 | `kv_a` (`kv`) `blackbox-0351`; `alloc_a` (`alloc`) `blackbox-0352`; `frame_a` (`frame`) `blackbox-0353` |
 
 - **The rung's tasks** are lines of `hive/backlog.jsonl`, published by the cutter as its own rules say (each once the
   tip fails it, and while fewer than `cutter.open` tasks are left to do). Each unit's file is on the tip as a stub

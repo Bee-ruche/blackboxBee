@@ -139,6 +139,70 @@
       "case_bytes": 256,
       "answer_bytes": 4096,
       "refuses": true
+    },
+    "unrle": {
+      "files": ["units/unrle.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 600,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "unpack32": {
+      "files": ["units/unpack32.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 270,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "kv": {
+      "files": ["units/kv.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 600,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "alloc": {
+      "files": ["units/alloc.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 600,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "frame": {
+      "files": ["units/frame.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 900,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "kv_a": {
+      "files": ["units/kv_a.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 600,
+      "answer_bytes": 4096,
+      "refuses": false
+    },
+    "alloc_a": {
+      "files": ["units/alloc_a.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 600,
+      "answer_bytes": 4096,
+      "refuses": false
+    },
+    "frame_a": {
+      "files": ["units/frame_a.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 900,
+      "answer_bytes": 4096,
+      "refuses": true
     }
   },
   "variants": 3,
