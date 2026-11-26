@@ -88,7 +88,7 @@ Carrying the black box's bytes, or an emulator of its processor, is not a reimpl
 | `numfmt` | `blackbox numfmt` | an integer written out, under a byte of flags | up to 12 bytes |
 | `record` | `blackbox record` | a parser of a small text format of fields, to a binary form | up to 400 bytes |
 | `vm` | `blackbox vm` | a small machine that runs a byte code and answers what it emits | up to 128 bytes |
-| `sbox8` | `blackbox sbox8` | a keyed transform of 8-byte blocks, with a padding rule | up to 260 bytes |
+| `sbox8` | `blackbox sbox8` | a keyed block transform | up to 260 bytes |
 | `calendar` | `blackbox calendar` | a day number written out as a date, under a byte of flags | up to 16 bytes |
 | `utf` | `blackbox utf` | a text decoded and written again in another encoding | up to 300 bytes |
 | `expr` | `blackbox expr` | an expression in a small infix language, evaluated, the value written out | up to 200 bytes |

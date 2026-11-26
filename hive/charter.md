@@ -61,24 +61,37 @@ must also be listed above.
 
 The project grows by **rungs**: batches of new functions of the black box, each harder than the last, added by the
 project's maintainer in one commit (a new binary, the manifest's entries, a stub file per unit, `units/UNITS.md`, this
-charter and the backlog). The cutter never adds a rung. A rung's ids go by hundreds: rung 2's tasks are
-`blackbox-0201` to `-0249`, a task cut again taking the next free one; its fallbacks have fixed ids, `lz_a`
-`blackbox-0251` and `vm2_a` `blackbox-0252`.
+charter and the backlog). The cutter never adds a rung. A rung's ids go by hundreds: from rung 2 on, rung N's tasks
+are `blackbox-0N01` to `-0N49` (N on two digits: `blackbox-0201`, `blackbox-0301`; rung 1's are `blackbox-0001` to
+`-0008`), a task cut again taking the next free one; its fallbacks have fixed ids from `-0N51`:
+
+| Rung | Fallback (for) and its fixed id |
+| --- | --- |
+| 2 | `lz_a` (`lz`) `blackbox-0251`; `vm2_a` (`vm2`) `blackbox-0252` |
 
 - **The rung's tasks** are lines of `hive/backlog.jsonl`, published by the cutter as its own rules say (each once the
   tip fails it, and while fewer than `cutter.open` tasks are left to do). Each unit's file is on the tip as a stub
   (the blank unit, which every judgement refuses) so that the tip fails each task until a worker's unit is accepted.
-- **A fallback** is the same function of the black box under another name, judged on a narrower family of inputs:
-  rung 2's are `lz_a` (for `lz`) and `vm2_a` (for `vm2`). The judge checks them already; **no task names a fallback
-  until its full task stalls.** A task **stalls** when it has had at least four failures (a judged refusal, a deal run
-  out, a deal given back as out of reach) and no acceptance, counted over its lineage (`parent`).
-- **The cut at a stall**, one cut: it closes the stalled task; it adds the fallback's task, under its fixed id (its
-  title « Write the unit lz_a: the black box's lz, on a narrower family of inputs »; its context the full task's,
-  with `lz_a` for `lz`, and one sentence more: « It is the same function as lz, on a narrower family of inputs. »);
-  and it adds a fresh full task for the same unit, under a new id, whose `needs` names the fallback's task and
-  whose `parent` is the closed task. A task that needed the closed one is added again, under a new id, needing the
-  fresh task instead (a published line never changes). The cut is one cut, held to `cutter.changes`; `cutter.open` is
-  the project's aim, not a bound on it.
+- **A fallback** is the same function of the black box under another name, judged on a narrower family of inputs: the
+  table above names them. The judge checks them already; **no task names a fallback until its full task stalls.** A
+  task **stalls** when it has had at least four failures (a judged refusal, a deal run out, a deal given back as out of
+  reach) and no acceptance, counted from the unit's last cut (a task cut again starts from none: the failures of the
+  task it replaces are not its own).
+- **The cut at a stall**, one cut, once per unit, only for a unit that has a row in the table above (a stalled task of
+  any other unit, or of a unit whose fallback's task exists already, is left to the cutter's ordinary rules). For a unit
+  `U` whose fallback is `U_a`, the cut:
+  1. closes the stalled task;
+  2. adds the fallback's task, under its fixed id: its title « Write the unit U_a: the black box's U, on a narrower
+     family of inputs »; its `files` `units/U_a.c` and its option `unit` `U_a`; its context the stalled task's, with
+     `U_a` for every `U` in it, and one sentence more: « It is the same function as U, on a narrower family of
+     inputs. »; its `needs` a copy of the stalled task's own `needs`, if it had any;
+  3. adds a fresh full task for `U`, under a new id, with the stalled task's title, files, option and context, whose
+     `parent` is the closed task and whose `needs` are a copy of the closed task's own `needs`, and nothing more: it
+     does not wait for the fallback, both are open at once, and a worker takes either;
+  4. adds again, under new ids, each task that needed the closed one, needing the fresh task instead (a published line
+     never changes).
+
+  The cut is one cut, held to `cutter.changes`; `cutter.open` is the project's aim, not a bound on it.
 - **Three rules for every rung:**
   1. **Constants are part of the specification.** The numbers and tables a function computes with may be written in
      a unit as C data, whether found by reading the black box or by running it. What stays forbidden is the black
@@ -93,7 +106,7 @@ charter and the backlog). The cutter never adds a rung. A rung's ids go by hundr
 
 - A task on a protected path, or with a goal other than « correct » and the option `unit`.
 - A task on a unit the judge has no entry for.
-- A task naming a fallback (`lz_a`, `vm2_a`) outside the cut at a stall (« The ladder »).
+- A task naming a fallback (« The ladder »'s table) outside the cut at a stall (« The ladder »).
 - A task text that says how a function of the black box works: finding out is the task.
 
 ## Publishing
