@@ -113,6 +113,8 @@ are `blackbox-0N01` to `-0N49` (N on two digits: `blackbox-0201`, `blackbox-0301
   2. **The project's own accepted units may be reused.** A unit accepted on the project's `hive` branch is the
      project's own work, under its licence: a unit whose function contains another's may build on it. A copy from
      anywhere else is still forbidden.
+     A task's `needs` are met only by the acceptance of the tasks it names: an accepted fallback (`parse_a`, say)
+     never meets the `needs` of another unit's task, though it may be read and reused as any accepted unit.
   3. **No task text says how a function works**, at any rung: a title gives the kind of function, as
      `units/UNITS.md` does, and nothing more.
 
