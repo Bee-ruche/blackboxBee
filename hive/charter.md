@@ -49,7 +49,9 @@ for word:
 - rung 3, each with its task in `hive/backlog.jsonl` (some waiting, by `needs`, for a unit of rung 1): `unrle`,
   `unpack32`, `kv`, `alloc`, `frame`;
 - rung 4, each with its task in `hive/backlog.jsonl` (vm2sum's waiting, by `needs`, for vm2's): `vm2sum`,
-  `tlvcheck`, `fold`.
+  `tlvcheck`, `fold`;
+- rung 5, the last planned, each with its task in `hive/backlog.jsonl` (`parse`'s waiting, by `needs`, for `lex`'s,
+  `run`'s for `parse`'s): `lex`, `parse`, `run`.
 
 The judge also checks `match` (rung 4) and its fallback `match_a`, which are **staged**: no task names them, and the
 cutter writes none, until the project's maintainer adds `match` to the list above (no stall of `match` can arise
@@ -79,6 +81,7 @@ are `blackbox-0N01` to `-0N49` (N on two digits: `blackbox-0201`, `blackbox-0301
 | 2 | `lz_a` (`lz`) `blackbox-0251`; `vm2_a` (`vm2`) `blackbox-0252` |
 | 3 | `kv_a` (`kv`) `blackbox-0351`; `alloc_a` (`alloc`) `blackbox-0352`; `frame_a` (`frame`) `blackbox-0353` |
 | 4 | `fold_a` (`fold`) `blackbox-0451`; `match_a` (`match`, staged) `blackbox-0452` |
+| 5 | `parse_a` (`parse`) `blackbox-0551`; `run_a` (`run`) `blackbox-0552` |
 
 - **The rung's tasks** are lines of `hive/backlog.jsonl`, published by the cutter as its own rules say (each once the
   tip fails it, and while fewer than `cutter.open` tasks are left to do). Each unit's file is on the tip as a stub

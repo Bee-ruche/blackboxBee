@@ -39,8 +39,9 @@ refuse() { echo "build-unit: units/$unit.c: $1 (units/UNITS.md)" >&2; exit 1; }
 # utf 988, expr 4,091, lz 1,338, vm2 2,159 bytes. Rung 3: unrle 395, unpack32 742, kv 3,072, alloc 1,319,
 # frame 4,246 bytes. Rung 4 (the honest modules built as above; the black box's own functions are what is compiled
 # at -O3 -funroll-loops: reference/README.md): vm2sum 2,653, tlvcheck 823, fold 746, match 6,235 bytes.
+# Rung 5 (compiled apart the same way): lex 1,896, parse 8,991, run 15,686 bytes.
 # A fallback has its full unit's cap (lz_a lz's, vm2_a vm2's, kv_a kv's, alloc_a alloc's, frame_a frame's, fold_a
-# fold's, match_a match's).
+# fold's, match_a match's, parse_a parse's, run_a run's).
 case "$unit" in
     sum16) cap=4096 ;;
     scramble) cap=4096 ;;
@@ -72,6 +73,11 @@ case "$unit" in
     match) cap=24940 ;;
     fold_a) cap=4096 ;;
     match_a) cap=24940 ;;
+    lex) cap=7584 ;;
+    parse) cap=35964 ;;
+    run) cap=62744 ;;
+    parse_a) cap=35964 ;;
+    run_a) cap=62744 ;;
     *) echo "build-unit: the project knows no unit $unit" >&2; exit 1 ;;
 esac
 work=$(mktemp -d)

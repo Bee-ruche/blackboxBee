@@ -251,6 +251,46 @@
       "case_bytes": 400,
       "answer_bytes": 4096,
       "refuses": true
+    },
+    "lex": {
+      "files": ["units/lex.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 600,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "parse": {
+      "files": ["units/parse.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 600,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "run": {
+      "files": ["units/run.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 600,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "parse_a": {
+      "files": ["units/parse_a.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 600,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "run_a": {
+      "files": ["units/run_a.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 600,
+      "answer_bytes": 4096,
+      "refuses": true
     }
   },
   "variants": 3,
