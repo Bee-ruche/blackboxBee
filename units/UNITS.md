@@ -58,6 +58,10 @@ judge refuses a unit that fails any of them:
    | | | | `kv`, `kv_a` | 12,288 |
    | | | | `alloc`, `alloc_a` | 5,276 |
    | | | | `frame`, `frame_a` | 16,984 |
+   | | | | `vm2sum` | 10,612 |
+   | | | | `tlvcheck` | 4,096 |
+   | | | | `fold`, `fold_a` | 4,096 |
+   | | | | `match`, `match_a` | 24,940 |
 
    Each cap is four times the module of an honest unit written for the project, and never under 4 KiB. Comments,
    names and the layout of the source cost nothing: the cap is on the module the compiler makes.
@@ -107,10 +111,17 @@ Carrying the black box's bytes, or an emulator of its processor, is not a reimpl
 | `kv_a` | `blackbox kv_a` | `kv`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 600 bytes |
 | `alloc_a` | `blackbox alloc_a` | `alloc`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 600 bytes |
 | `frame_a` | `blackbox frame_a` | `frame`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 900 bytes |
+| `vm2sum` | `blackbox vm2sum` | a digest of what `vm2`'s program did | up to 256 bytes |
+| `tlvcheck` | `blackbox tlvcheck` | a validator of a binary format | up to 512 bytes |
+| `fold` | `blackbox fold` | a small machine that runs a byte code | up to 128 bytes |
+| `match` | `blackbox match` | a pattern in a small dialect matched against a text (staged) | up to 400 bytes |
+| `fold_a` | `blackbox fold_a` | `fold`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 128 bytes |
+| `match_a` | `blackbox match_a` | `match`, on a narrower family of inputs (a fallback, staged) | up to 400 bytes |
 
 Rung 1 is the first eight units; rung 2 the next six and their two fallbacks; rung 3 the next five and their three
 fallbacks (`hive/charter.md`, « The ladder »). Each case of kv and alloc is a whole input: a script of operations
-runs from a fresh state, never on what an earlier case left.
+runs from a fresh state, never on what an earlier case left. Rung 4 is the next four and their two fallbacks; its
+functions are compiled at a higher optimisation, in a part of the black box of their own (`reference/README.md`).
 
 The judge draws its cases with `bee/reference/generate.c`. For rung 1's units, that file shows the shape of the
 inputs it tries (their lengths, their bytes, the grammar the parser is tried on), never an answer: the answers are the

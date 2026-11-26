@@ -47,12 +47,19 @@ for word:
 - rung 2 (the ladder, below), each with its task in `hive/backlog.jsonl`: `sbox8`, `calendar`, `utf`, `expr`, `lz`,
   `vm2`;
 - rung 3, each with its task in `hive/backlog.jsonl` (some waiting, by `needs`, for a unit of rung 1): `unrle`,
-  `unpack32`, `kv`, `alloc`, `frame`.
+  `unpack32`, `kv`, `alloc`, `frame`;
+- rung 4, each with its task in `hive/backlog.jsonl` (vm2sum's waiting, by `needs`, for vm2's): `vm2sum`,
+  `tlvcheck`, `fold`.
 
-When the judge learns to check a new unit, its author adds the unit's value to this list, word for word. A value
-listed here that no task names yet is one the cutter may write a task for, on the file `units/<unit>.c`. The judge
-also checks units that are not in this list, the ladder's fallbacks (below). **The cutter writes a task only for a value
-listed above, and for a fallback only in the cut at a stall (below), never otherwise.**
+The judge also checks `match` (rung 4) and its fallback `match_a`, which are **staged**: no task names them, and the
+cutter writes none, until the project's maintainer adds `match` to the list above (no stall of `match` can arise
+before; once it is listed, `match_a`'s row in the ladder's table applies as any other).
+
+When the judge learns to check a new unit, its author, the project's maintainer, adds the unit's value to this list,
+word for word. A value listed here that no task names yet is one the cutter may write a task for, on the file
+`units/<unit>.c`. The judge also checks units that are not in this list: the ladder's fallbacks (below), and the staged
+units (above). **The cutter writes a task only for a value listed above, and for a fallback only in the cut at a stall
+(below), never otherwise.**
 
 A new unit needs the judge's author first: a function of the black box (a new binary, built as `reference/README.md`
 says), its entry in the manifest, its cases (`units/UNITS.md` says where they are drawn) and its line in
@@ -71,6 +78,7 @@ are `blackbox-0N01` to `-0N49` (N on two digits: `blackbox-0201`, `blackbox-0301
 | --- | --- |
 | 2 | `lz_a` (`lz`) `blackbox-0251`; `vm2_a` (`vm2`) `blackbox-0252` |
 | 3 | `kv_a` (`kv`) `blackbox-0351`; `alloc_a` (`alloc`) `blackbox-0352`; `frame_a` (`frame`) `blackbox-0353` |
+| 4 | `fold_a` (`fold`) `blackbox-0451`; `match_a` (`match`, staged) `blackbox-0452` |
 
 - **The rung's tasks** are lines of `hive/backlog.jsonl`, published by the cutter as its own rules say (each once the
   tip fails it, and while fewer than `cutter.open` tasks are left to do). Each unit's file is on the tip as a stub
@@ -110,6 +118,7 @@ are `blackbox-0N01` to `-0N49` (N on two digits: `blackbox-0201`, `blackbox-0301
 - A task on a protected path, or with a goal other than « correct » and the option `unit`.
 - A task on a unit the judge has no entry for.
 - A task naming a fallback (« The ladder »'s table) outside the cut at a stall (« The ladder »).
+- A task on a staged unit (`match`, `match_a`) before the project's maintainer lists `match`.
 - A task text that says how a function of the black box works: finding out is the task.
 
 ## Publishing

@@ -203,6 +203,54 @@
       "case_bytes": 900,
       "answer_bytes": 4096,
       "refuses": true
+    },
+    "vm2sum": {
+      "files": ["units/vm2sum.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 4000,
+      "case_bytes": 256,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "tlvcheck": {
+      "files": ["units/tlvcheck.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 6000,
+      "case_bytes": 512,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "fold": {
+      "files": ["units/fold.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 3000,
+      "case_bytes": 128,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "match": {
+      "files": ["units/match.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 3000,
+      "case_bytes": 400,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "fold_a": {
+      "files": ["units/fold_a.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 3000,
+      "case_bytes": 128,
+      "answer_bytes": 4096,
+      "refuses": true
+    },
+    "match_a": {
+      "files": ["units/match_a.c"],
+      "blank": ["bee/reference/blank.c"],
+      "cases": 3000,
+      "case_bytes": 400,
+      "answer_bytes": 4096,
+      "refuses": true
     }
   },
   "variants": 3,

@@ -37,8 +37,10 @@ refuse() { echo "build-unit: units/$unit.c: $1 (units/UNITS.md)" >&2; exit 1; }
 # The honest modules, built with these flags on 24 November 2026: sum16 168, scramble 242, rle 360, hash32 335,
 # pack32 499, numfmt 899, record 3,104, vm 1,447 bytes. Rung 2, on 26 November 2026: sbox8 1,252, calendar 4,377,
 # utf 988, expr 4,091, lz 1,338, vm2 2,159 bytes. Rung 3: unrle 395, unpack32 742, kv 3,072, alloc 1,319,
-# frame 4,246 bytes.
-# A fallback has its full unit's cap (lz_a lz's, vm2_a vm2's, kv_a kv's, alloc_a alloc's, frame_a frame's).
+# frame 4,246 bytes. Rung 4 (the honest modules built as above; the black box's own functions are what is compiled
+# at -O3 -funroll-loops: reference/README.md): vm2sum 2,653, tlvcheck 823, fold 746, match 6,235 bytes.
+# A fallback has its full unit's cap (lz_a lz's, vm2_a vm2's, kv_a kv's, alloc_a alloc's, frame_a frame's, fold_a
+# fold's, match_a match's).
 case "$unit" in
     sum16) cap=4096 ;;
     scramble) cap=4096 ;;
@@ -64,6 +66,12 @@ case "$unit" in
     kv_a) cap=12288 ;;
     alloc_a) cap=5276 ;;
     frame_a) cap=16984 ;;
+    vm2sum) cap=10612 ;;
+    tlvcheck) cap=4096 ;;
+    fold) cap=4096 ;;
+    match) cap=24940 ;;
+    fold_a) cap=4096 ;;
+    match_a) cap=24940 ;;
     *) echo "build-unit: the project knows no unit $unit" >&2; exit 1 ;;
 esac
 work=$(mktemp -d)
