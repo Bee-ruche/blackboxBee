@@ -7,6 +7,10 @@
  * bee/reference/project.json. The same seed gives the same cases. Each unit has a few fixed cases (its edges, as the
  * project's builders saw them) and draws the rest; the fixed ones are shuffled in among the drawn ones.
  *
+ * This file knows rung 1's units. Every other unit of the manifest (rung 2 on: units/UNITS.md) has its generator inside
+ * the black box: this program starts the black box beside it in its place (forward, below), with the same arguments
+ * and the seed still unread on its input.
+ *
  * What this file knows is the SHAPE of each unit's inputs (lengths, bytes, the grammar a parser is tried on), never
  * an answer: the answers are the reference's alone (reference/blackbox).
  */
@@ -14,6 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <unistd.h>
 
 /* ------------------------------------------------------------------------------- the draws: xoshiro256**, seeded */
 
@@ -437,6 +443,29 @@ static void put32(uint8_t *at, uint32_t v)
     at[3] = (uint8_t)(v >> 24);
 }
 
+/* A unit this file does not know (rung 2 on: units/UNITS.md) has its generator inside the black box: the black box,
+ * beside this program (its folder read from /proc/self/exe: /ref/reference in the judge, the reference copied by
+ * bee/check.sh), is started in its place, given « --generate <unit> <count> [CASES] » and this program's input, the seed
+ * not yet read. */
+static void forward(char **argv)
+{
+    static char path[4096];
+    char *args[6] = {path, "--generate", argv[1], argv[2], argv[3], NULL};
+    ssize_t size = readlink("/proc/self/exe", path, sizeof path - sizeof "reference");
+    char *slash;
+    if (size <= 0 || (size_t)size >= sizeof path - sizeof "reference") {
+        errno = size < 0 ? errno : ENAMETOOLONG;
+        return;
+    }
+    path[size] = 0;
+    if (!(slash = strrchr(path, '/'))) {
+        errno = ENOENT;
+        return;
+    }
+    strcpy(slash + 1, "reference");
+    execv(path, args);
+}
+
 int main(int argc, char **argv)
 {
     const struct unit *unit = NULL;
@@ -449,6 +478,11 @@ int main(int argc, char **argv)
         for (i = 0; i < sizeof UNITS / sizeof UNITS[0]; i++)
             if (strcmp(argv[1], UNITS[i].name) == 0)
                 unit = &UNITS[i];
+    if (!unit && (argc == 3 || argc == 4)) {
+        forward(argv);  /* returns only if the black box cannot be started */
+        perror("generate: the black box beside this program cannot be started");
+        return 3;
+    }
     if (!unit) {
         fputs("usage: generate <unit> <count> [CASES]   (the seed, 64 hexadecimal digits, on the input)\n", stderr);
         return 2;

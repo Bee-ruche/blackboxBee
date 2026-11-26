@@ -45,9 +45,16 @@ judge refuses a unit that fails any of them:
    memory, table or global from outside), have no start function and no custom section, export **exactly**
    `bee_answer` (a function of four `i32` to an `i32`) and its memory, and be no larger than **its unit's cap**:
 
-   | Unit | sum16 | scramble | rle | hash32 | pack32 | numfmt | record | vm |
-   | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-   | Cap on the module, in bytes | 4,096 | 4,096 | 4,096 | 4,096 | 4,096 | 4,096 | 12,416 | 5,788 |
+   | Unit | Cap on the module, in bytes | | Unit | Cap on the module, in bytes |
+   | --- | --- | --- | --- | --- |
+   | `sum16` | 4,096 | | `sbox8` | 5,008 |
+   | `scramble` | 4,096 | | `calendar` | 17,508 |
+   | `rle` | 4,096 | | `utf` | 4,096 |
+   | `hash32` | 4,096 | | `expr` | 16,364 |
+   | `pack32` | 4,096 | | `lz`, `lz_a` | 5,352 |
+   | `numfmt` | 4,096 | | `vm2`, `vm2_a` | 8,636 |
+   | `record` | 12,416 | | | |
+   | `vm` | 5,788 | | | |
 
    Each cap is four times the module of an honest unit written for the project, and never under 4 KiB. Comments,
    names and the layout of the source cost nothing: the cap is on the module the compiler makes.
@@ -81,9 +88,23 @@ Carrying the black box's bytes, or an emulator of its processor, is not a reimpl
 | `numfmt` | `blackbox numfmt` | an integer written out, under a byte of flags | up to 12 bytes |
 | `record` | `blackbox record` | a parser of a small text format of fields, to a binary form | up to 400 bytes |
 | `vm` | `blackbox vm` | a small machine that runs a byte code and answers what it emits | up to 128 bytes |
+| `sbox8` | `blackbox sbox8` | a keyed transform of 8-byte blocks, with a padding rule | up to 260 bytes |
+| `calendar` | `blackbox calendar` | a day number written out as a date, under a byte of flags | up to 16 bytes |
+| `utf` | `blackbox utf` | a text decoded and written again in another encoding | up to 300 bytes |
+| `expr` | `blackbox expr` | an expression in a small infix language, evaluated, the value written out | up to 200 bytes |
+| `lz` | `blackbox lz` | a decoder of a small compressed format | up to 600 bytes |
+| `vm2` | `blackbox vm2` | a larger machine that runs a byte code and answers what it emits | up to 256 bytes |
+| `lz_a` | `blackbox lz_a` | `lz`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 600 bytes |
+| `vm2_a` | `blackbox vm2_a` | `vm2`, on a narrower family of inputs (a fallback: `hive/charter.md`) | up to 256 bytes |
 
-The judge draws its cases with `bee/reference/generate.c`. That file shows the shape of the inputs it tries (their
-lengths, their bytes, the grammar the parser is tried on), never an answer: the answers are the black box's.
+Rung 1 is the first eight units; rung 2 the next six and their two fallbacks (`hive/charter.md`, « The ladder »).
+
+The judge draws its cases with `bee/reference/generate.c`. For rung 1's units, that file shows the shape of the
+inputs it tries (their lengths, their bytes, the grammar the parser is tried on), never an answer: the answers are the
+black box's. **From rung 2 on, the black box draws its own cases**: `generate.c` hands every unit it does not know to
+the black box beside it, `reference/blackbox --generate <unit> <count> [CASES]` with the seed on its input
+(`reference/README.md`). No public C file shows the shapes of those inputs: the black box's generator shows them
+when it runs (in the sandbox only, like the black box itself), and its machine code holds them.
 
 ## Running the black box
 

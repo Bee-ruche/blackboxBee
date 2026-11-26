@@ -5,8 +5,9 @@
   - `project.json`: the units, their bounds, the image the judge uses (`wasm`: the judge's Ubuntu with gcc, and
     clang 18, its WebAssembly linker and wabt);
   - `build-reference`: copies the black box (`../reference/blackbox`) as the reference, and builds the generator of
-    cases (`generate.c`). The black box is also the reference's driver: it reads a file of cases and writes the
-    answers in the judge's framing itself (`../reference/README.md`);
+    cases (`generate.c`). For the units of rung 2 on, the generator hands the drawing to the black box itself
+    (`../reference/blackbox --generate`: `../units/UNITS.md`). The black box is also the reference's driver: it reads a
+    file of cases and writes the answers in the judge's framing itself (`../reference/README.md`);
   - `build-unit`: one unit's driver. The unit's file becomes a WebAssembly module that imports nothing (clang,
     `wasm-ld`), read back and held to its rule and its cap (`wasm-objdump`, `wasm-validate`: `../units/UNITS.md`),
     then translated to C by `wasm2c` and compiled with `host.c` and the translator's runtime. The nonce the judge

@@ -35,7 +35,8 @@ printf %s "$nonce" | grep -Eq '^[0-9a-f]{64}$' || { echo "build-unit: the nonce 
 refuse() { echo "build-unit: units/$unit.c: $1 (units/UNITS.md)" >&2; exit 1; }
 # The cap on each unit's module, in bytes: four times the honest unit's module, and never under 4 KiB (units/UNITS.md).
 # The honest modules, built with these flags on 24 November 2026: sum16 168, scramble 242, rle 360, hash32 335,
-# pack32 499, numfmt 899, record 3,104, vm 1,447 bytes.
+# pack32 499, numfmt 899, record 3,104, vm 1,447 bytes. Rung 2, on 26 November 2026: sbox8 1,252, calendar 4,377,
+# utf 988, expr 4,091, lz 1,338, vm2 2,159 bytes (a fallback has its full unit's cap: lz_a lz's, vm2_a vm2's).
 case "$unit" in
     sum16) cap=4096 ;;
     scramble) cap=4096 ;;
@@ -45,6 +46,14 @@ case "$unit" in
     numfmt) cap=4096 ;;
     record) cap=12416 ;;
     vm) cap=5788 ;;
+    sbox8) cap=5008 ;;
+    calendar) cap=17508 ;;
+    utf) cap=4096 ;;
+    expr) cap=16364 ;;
+    lz) cap=5352 ;;
+    vm2) cap=8636 ;;
+    lz_a) cap=5352 ;;
+    vm2_a) cap=8636 ;;
     *) echo "build-unit: the project knows no unit $unit" >&2; exit 1 ;;
 esac
 work=$(mktemp -d)

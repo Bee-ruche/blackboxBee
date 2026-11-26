@@ -34,6 +34,10 @@
   "files": 1,
   "file_bytes": 65536
  },
+ "cutter": {
+  "open": 6,
+  "changes": 10
+ },
  "judge": {
   "kind": "reference",
   "timeout_seconds": 1800,

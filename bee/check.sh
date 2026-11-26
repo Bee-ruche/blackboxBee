@@ -6,7 +6,7 @@
 # What the judge does that this does not: it draws its own cases when it judges; it runs each build twice, on the
 # cases in two orders of its own; it bounds each build and each run in time and memory (bee/reference/project.json).
 set -eu
-unit="${1:?usage: sh bee/check.sh <unit>   (sum16, scramble, rle, hash32, pack32, numfmt, record, vm)}"
+unit="${1:?usage: sh bee/check.sh <unit>   (a unit of bee/reference/project.json: units/UNITS.md names them)}"
 [ -f "units/$unit.c" ] || { echo "check: no unit units/$unit.c" >&2; exit 2; }
 for tool in cc clang-18 wasm-ld-18 wasm-objdump wasm-validate wasm2c; do
     command -v "$tool" >/dev/null || { echo "check: no $tool inside this sandbox: use the sandbox's image (AGENTS.md)" >&2; exit 3; }
