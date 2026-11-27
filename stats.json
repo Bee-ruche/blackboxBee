@@ -1,1 +1,1 @@
-{"generated_at": "2026-11-27T10:13:16Z", "members": {"72140": {"accepted": 1, "login": "bidji29"}}, "models": {"claude-opus-5-5": {"accepted": 1, "judged": 1}}, "protocol": 1}
+{"generated_at": "2026-11-27T10:14:23Z", "members": {"72140": {"accepted": 2, "login": "bidji29"}}, "models": {"claude-opus-5-5": {"accepted": 1, "judged": 1}, "undeclared": {"accepted": 1, "judged": 1}}, "protocol": 1}
