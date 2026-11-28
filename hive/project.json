@@ -20,6 +20,9 @@
   ".gitattributes"
  ],
  "backoff_hours": 0,
+ "trusted": {
+  "cut_hours": 24
+ },
  "members": {
   "only": [72140],
   "deals_per_day": 50
@@ -37,7 +40,8 @@
  },
  "cutter": {
   "open": 6,
-  "changes": 10
+  "changes": 10,
+  "open_more": 10
  },
  "judge": {
   "kind": "reference",
