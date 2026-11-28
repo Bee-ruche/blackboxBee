@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: Bee-ruche/hive
-          ref: 72a2b851c4f35dd46e40ca737df29f43ede3daaf
+          ref: c885bc0eb0580519bd675cb6fb89deea26083417
           path: protocol
           persist-credentials: false
       - name: The judge is the one the project's hourly run names
