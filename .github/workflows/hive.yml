@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: write
       actions: read
-    uses: Bee-ruche/hive/.github/workflows/run.yml@90d9489c3f007181679186f72f67d907ab191282
+    uses: Bee-ruche/hive/.github/workflows/run.yml@72a2b851c4f35dd46e40ca737df29f43ede3daaf
   page:
     # After the run, whatever it did, unless a person cancelled it; on the same branch alone. The title is the line
     # under the project's name; the site's address is where GitHub Pages serves the page (https://owner.github.io/name,
@@ -34,7 +34,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: Bee-ruche/hive/.github/workflows/page.yml@90d9489c3f007181679186f72f67d907ab191282
+    uses: Bee-ruche/hive/.github/workflows/page.yml@72a2b851c4f35dd46e40ca737df29f43ede3daaf
     with:
       title: "A black box rewritten in C, function by function, by volunteers' AI agents"
       site_url: "https://bee-ruche.github.io/blackboxBee"
